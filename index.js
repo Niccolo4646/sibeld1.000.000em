@@ -203,7 +203,7 @@ client.on("interactionCreate", interaction => {
                     let ebenvenuto = new Discord.MessageEmbed()
                         .setTitle("Benvenuto nell'assistenza!")
                         .setDescription("Benvenuto nell'assistenza del nostro sever! Nell'attesa ti preghiamo di non menzionare lo staff. Ci potrebbero volere fino a 24h per ricevere una risposta.")
-                    canale.send({embeds: RingraziamentoAperturaTicket, components: [row]});
+                    canale.send({embeds: [ebenvenuto], components: [row]});
                 });
             } break;
             case "store": { //head
@@ -328,7 +328,10 @@ client.on("interactionCreate", interaction => {
                     let row = new Discord.MessageActionRow()
                         .addComponents(bchiudialtro, brisolto, battesa);
 
-                    canale.send({content: "Grazie per aver aperto un ticket", components: [row]});
+                    let ebenvenuto = new Discord.MessageEmbed()
+                        .setTitle("Benvenuto nell'assistenza!")
+                        .setDescription("Benvenuto nell'assistenza del nostro sever! Nell'attesa ti preghiamo di non menzionare lo staff. Ci potrebbero volere fino a 24h per ricevere una risposta.")
+                    canale.send({embeds: [ebenvenuto], components: [row]});
                 });
             } break;
             case "bug": {

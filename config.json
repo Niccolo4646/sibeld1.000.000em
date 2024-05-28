@@ -1,17 +1,16 @@
 {
   "token": "",
-  "GuildId": "",
-  "FooterEmbeds": "",
-  "RuoloStaff": "",
-  "RingraziamentoAperturaTicket": "",
+  "GuildId": "1146061217719394324",
+  "FooterEmbeds": "test footer",
+  "RuoloStaff": "1230558743251390535",
 
-  "CategoriaAccount": "",
-  "CategoriaStore": "",
-  "CategoriaSegnalaPlayer": "",
-  "CategoriaBug": "",
-  "CategoriaAppelaBanMute": "",
-  "CategoriaAltro": "",
-  "CategoriaAttesa": "",
+  "CategoriaAccount": "1237788935732596807",
+  "CategoriaStore": "1237789046478999624",
+  "CategoriaSegnalaPlayer": "1237789467344113685",
+  "CategoriaBug": "1237789424323002418",
+  "CategoriaAppelaBanMute": "1237789158697861210",
+  "CategoriaAltro": "1237789586642702437",
+  "CategoriaAttesa": "1245098472277807146",
 
-  "CanaleTranscript": ""
+  "CanaleTranscript": "1245094753368936530"
 }
