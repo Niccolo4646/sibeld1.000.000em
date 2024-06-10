@@ -1,7 +1,7 @@
 {
   "token": "",
   "GuildId": "1146061217719394324",
-  "FooterEmbeds": "test footer",
+  "FooterEmbeds": "🌴ShoreMC🌴",
   "RuoloStaff": "1230558743251390535",
 
   "CategoriaAccount": "1237788935732596807",
@@ -11,6 +11,8 @@
   "CategoriaAppelaBanMute": "1237789158697861210",
   "CategoriaAltro": "1237789586642702437",
   "CategoriaAttesa": "1245098472277807146",
+
+  "CategoriaCandidature": "1246189339319341107",
 
   "CanaleTranscript": "1245094753368936530"
 }

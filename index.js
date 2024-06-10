@@ -1,7 +1,7 @@
 ﻿const Discord = require("discord.js");
 const { Permissions } = require('discord.js');
 const { Modal } = require("discord.js");
-const { token, GuildId, FooterEmbeds, CategoriaAccount, RingraziamentoAperturaTicket, CategoriaStore, CategoriaSegnalaPlayer, CategoriaBug, CategoriaAppelaBanMute, CategoriaAltro, CategoriaAttesa, CanaleTranscript, RuoloStaff } = require('./config.json');
+const { token, GuildId, FooterEmbeds, CategoriaAccount, RingraziamentoAperturaTicket, CategoriaStore, CategoriaSegnalaPlayer, CategoriaBug, CategoriaAppelaBanMute, CategoriaAltro, CategoriaAttesa, CanaleTranscript, RuoloStaff, CategoriaCandidature } = require('./config.json');
 const { Intents, GatewayIntentBits, Client } = require("discord.js"); 
 
 const intents = new Intents([
@@ -75,6 +75,11 @@ client.on("ready", () => {
 })
 
 client.on("message", message => {
+    if(message.content == "!test") {
+        var server = GuildId;
+        message.reply(server.memberCount)
+    }
+
     if (message.content == "!ticket") {
         message.delete()
         if(message.member.roles.cache.has(RuoloStaff)){ 
@@ -128,11 +133,62 @@ client.on("message", message => {
                 }
             ])
 
-        let row = new Discord.MessageActionRow()
-            .addComponents(select)
+            let row = new Discord.MessageActionRow()
+                .addComponents(select)
 
-        message.channel.send({ embeds: [embed], components: [row] })
-    }}
+            message.channel.send({ embeds: [embed], components: [row] })
+        }
+    }
+    if(message.content == "!candidature") {
+        message.delete();
+        if(message.member.roles.cache.has(RuoloStaff)) {
+            let embed = new Discord.MessageEmbed()
+            .setTitle('Candidature!')
+            .setDescription('Vuoi candidarti per **ShoreMC**?\nAllora clicca qui sotto il ruolo per cui vuoi proprti!')
+            .setFooter({ text: FooterEmbeds })
+            .setColor("#68D3FF")
+            let select = new Discord.MessageSelectMenu()
+            .setCustomId("candidatureMenu")
+            .setPlaceholder("Seleziona un ruolo.")
+            .setMinValues(1)
+            .setMaxValues(1)
+            .addOptions([
+                {
+                    label: "Staff SS",
+                    description: "Per candidarti come SS Verified.",
+                    value: "staffss",
+                    emoji: "👮"
+                },
+                {
+                    label: "Staff Supporto",
+                    description: "Per candidarti come Support Staff.",
+                    value: "staffsupporto",
+                    emoji: "🫂"
+                },
+                {
+                    label: "Developer",
+                    description: "Per candidarti come Developer.",
+                    value: "staffdev",
+                    emoji: "👨‍💻"
+                },
+                {
+                    label: "Builder",
+                    description: "Per candidarti come Builder.",
+                    value: "staffbuilder",
+                    emoji: "⛏️"
+                },
+                {
+                    label: "Media",
+                    description: "Per candidarti come Media (Youtuber o Streamer).",
+                    value: "media",
+                    emoji: "🎙️"
+                }
+            ])
+
+            let row = new Discord.MessageActionRow().addComponents(select)
+            message.channel.send({ embeds: [embed], components: [row] })
+        }
+    }
 })
 
 //LOGICA TICKET SELECT MENU
@@ -529,7 +585,358 @@ client.on("interactionCreate", interaction => {
             } break;
         }
     }
-});
+    //CANDIDATURE
+    if (interaction.customId == "candidatureMenu") {
+        switch (interaction.values[0]) {
+            case "staffss": {
+                var server = client.guilds.cache.get(GuildId);
+
+                interaction.reply({ content: "Sto aprendo una candidatura", ephemeral: true });
+                server.channels.create("staff-ss-" + interaction.user.username, {
+                    type: "text"
+                }).then(canale => {
+                    canale.setTopic(`User ID: ${interaction.user.id}`);
+                    canale.setParent(CategoriaCandidature); //Settare la categoria
+                    if (canale.type === 'GUILD_TEXT') {
+                        // Crea un oggetto 'PermissionOverwriteFlags' per definire le autorizzazioni
+                        const permissionOverwrites = [
+                            {
+                                id: server.id,
+                                deny: [Permissions.FLAGS.VIEW_CHANNEL],
+                            },
+                            {
+                                id: interaction.user.id, // Utilizza interaction.user.id come ID dell'utente
+                                allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                            },
+                            {
+                                id: RuoloStaff,
+                                allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                            },
+                        ];
+
+                        // Utilizza 'permissionOverwrites.edit()' per aggiornare le autorizzazioni del canale
+                        canale.permissionOverwrites.set(permissionOverwrites)
+                            .then(() => {
+                                console.log("aggiornati permessi ticket");
+                            })
+                            .catch((error) => {
+                                console.error('Errore durante la modifica delle autorizzazioni del canale:', error);
+                            });
+                    } else {
+                        console.error('Il canale non è una TextChannel valida.');
+                    }
+                    canale.send(`<@&`+RuoloStaff+`> <@${interaction.user.id}>`);
+                    
+
+                    let bchiudialtro = new Discord.MessageButton()
+                        .setLabel("Chiudi")
+                        .setStyle("DANGER")
+                        .setCustomId("chiudialtro");
+
+                    let baccettato = new Discord.MessageButton()
+                        .setLabel("Accettato")
+                        .setStyle("SUCCESS")
+                        .setCustomId("accettatoaltro");
+                    
+                    let brifiutato = new Discord.MessageButton()
+                        .setLabel("Rifiutato")
+                        .setStyle("DANGER")
+                        .setCustomId("rifiutatoaltro");
+
+                    let battesa = new Discord.MessageButton()
+                        .setLabel("In attesa")
+                        .setStyle("SECONDARY")
+                        .setCustomId("attesaaltro");
+
+                    let row = new Discord.MessageActionRow()
+                        .addComponents(bchiudialtro, baccettato, brifiutato, battesa);
+
+                    let ebenvenuto = new Discord.MessageEmbed()
+                        .setTitle("Benvenuto nella tua candidatura!")
+                        .setDescription("Benvenuto nella candidatura per **ShoreMC**! Nell'attesa ti preghiamo di non menzionare lo staff. Ci potrebbero volere fino a 24h per ricevere una risposta.")
+                    canale.send({embeds: [ebenvenuto], components: [row]});
+                });
+                } break;
+            case "staffsupporto": {
+                var server = client.guilds.cache.get(GuildId);
+
+                interaction.reply({ content: "Sto aprendo una candidatura", ephemeral: true });
+                server.channels.create("staff-supporto-" + interaction.user.username, {
+                    type: "text"
+                }).then(canale => {
+                    canale.setTopic(`User ID: ${interaction.user.id}`);
+                    canale.setParent(CategoriaCandidature); //Settare la categoria
+                    if (canale.type === 'GUILD_TEXT') {
+                        // Crea un oggetto 'PermissionOverwriteFlags' per definire le autorizzazioni
+                        const permissionOverwrites = [
+                            {
+                                id: server.id,
+                                deny: [Permissions.FLAGS.VIEW_CHANNEL],
+                            },
+                            {
+                                id: interaction.user.id, // Utilizza interaction.user.id come ID dell'utente
+                                allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                            },
+                            {
+                                id: RuoloStaff,
+                                allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                            },
+                        ];
+
+                        // Utilizza 'permissionOverwrites.edit()' per aggiornare le autorizzazioni del canale
+                        canale.permissionOverwrites.set(permissionOverwrites)
+                            .then(() => {
+                                console.log("aggiornati permessi ticket");
+                            })
+                            .catch((error) => {
+                                console.error('Errore durante la modifica delle autorizzazioni del canale:', error);
+                            });
+                    } else {
+                        console.error('Il canale non è una TextChannel valida.');
+                    }
+                    canale.send(`<@&`+RuoloStaff+`> <@${interaction.user.id}>`);
+                    
+
+                    let bchiudialtro = new Discord.MessageButton()
+                        .setLabel("Chiudi")
+                        .setStyle("DANGER")
+                        .setCustomId("chiudialtro");
+
+                    let baccettato = new Discord.MessageButton()
+                        .setLabel("Accettato")
+                        .setStyle("SUCCESS")
+                        .setCustomId("accettatoaltro");
+                    
+                    let brifiutato = new Discord.MessageButton()
+                        .setLabel("Rifiutato")
+                        .setStyle("DANGER")
+                        .setCustomId("rifiutatoaltro");
+
+                    let battesa = new Discord.MessageButton()
+                        .setLabel("In attesa")
+                        .setStyle("SECONDARY")
+                        .setCustomId("attesaaltro");
+
+                    let row = new Discord.MessageActionRow()
+                        .addComponents(bchiudialtro, baccettato, brifiutato, battesa);
+
+                    let ebenvenuto = new Discord.MessageEmbed()
+                        .setTitle("Benvenuto nella tua candidatura!")
+                        .setDescription("Benvenuto nella candidatura per **ShoreMC**! Nell'attesa ti preghiamo di non menzionare lo staff. Ci potrebbero volere fino a 24h per ricevere una risposta.")
+                    canale.send({embeds: [ebenvenuto], components: [row]});
+                });
+                } break;
+                case "staffdev": {
+                    var server = client.guilds.cache.get(GuildId);
+    
+                    interaction.reply({ content: "Sto aprendo una candidatura", ephemeral: true });
+                    server.channels.create("staff-dev-" + interaction.user.username, {
+                        type: "text"
+                    }).then(canale => {
+                        canale.setTopic(`User ID: ${interaction.user.id}`);
+                        canale.setParent(CategoriaCandidature); //Settare la categoria
+                        if (canale.type === 'GUILD_TEXT') {
+                            // Crea un oggetto 'PermissionOverwriteFlags' per definire le autorizzazioni
+                            const permissionOverwrites = [
+                                {
+                                    id: server.id,
+                                    deny: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                                {
+                                    id: interaction.user.id, // Utilizza interaction.user.id come ID dell'utente
+                                    allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                                {
+                                    id: RuoloStaff,
+                                    allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                            ];
+    
+                            // Utilizza 'permissionOverwrites.edit()' per aggiornare le autorizzazioni del canale
+                            canale.permissionOverwrites.set(permissionOverwrites)
+                                .then(() => {
+                                    console.log("aggiornati permessi ticket");
+                                })
+                                .catch((error) => {
+                                    console.error('Errore durante la modifica delle autorizzazioni del canale:', error);
+                                });
+                        } else {
+                            console.error('Il canale non è una TextChannel valida.');
+                        }
+                        canale.send(`<@&`+RuoloStaff+`> <@${interaction.user.id}>`);
+                        
+    
+                        let bchiudialtro = new Discord.MessageButton()
+                            .setLabel("Chiudi")
+                            .setStyle("DANGER")
+                            .setCustomId("chiudialtro");
+    
+                        let baccettato = new Discord.MessageButton()
+                            .setLabel("Accettato")
+                            .setStyle("SUCCESS")
+                            .setCustomId("accettatoaltro");
+                        
+                        let brifiutato = new Discord.MessageButton()
+                            .setLabel("Rifiutato")
+                            .setStyle("DANGER")
+                            .setCustomId("rifiutatoaltro");
+    
+                        let battesa = new Discord.MessageButton()
+                            .setLabel("In attesa")
+                            .setStyle("SECONDARY")
+                            .setCustomId("attesaaltro");
+    
+                        let row = new Discord.MessageActionRow()
+                            .addComponents(bchiudialtro, baccettato, brifiutato, battesa);
+    
+                        let ebenvenuto = new Discord.MessageEmbed()
+                            .setTitle("Benvenuto nella tua candidatura!")
+                            .setDescription("Benvenuto nella candidatura per **ShoreMC**! Nell'attesa ti preghiamo di non menzionare lo staff. Ci potrebbero volere fino a 24h per ricevere una risposta.")
+                        canale.send({embeds: [ebenvenuto], components: [row]});
+                    });
+                } break;
+                case "staffbuilder": {
+                    var server = client.guilds.cache.get(GuildId);
+    
+                    interaction.reply({ content: "Sto aprendo una candidatura", ephemeral: true });
+                    server.channels.create("staff-builder-" + interaction.user.username, {
+                        type: "text"
+                    }).then(canale => {
+                        canale.setTopic(`User ID: ${interaction.user.id}`);
+                        canale.setParent(CategoriaCandidature); //Settare la categoria
+                        if (canale.type === 'GUILD_TEXT') {
+                            // Crea un oggetto 'PermissionOverwriteFlags' per definire le autorizzazioni
+                            const permissionOverwrites = [
+                                {
+                                    id: server.id,
+                                    deny: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                                {
+                                    id: interaction.user.id, // Utilizza interaction.user.id come ID dell'utente
+                                    allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                                {
+                                    id: RuoloStaff,
+                                    allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                            ];
+    
+                            // Utilizza 'permissionOverwrites.edit()' per aggiornare le autorizzazioni del canale
+                            canale.permissionOverwrites.set(permissionOverwrites)
+                                .then(() => {
+                                    console.log("aggiornati permessi ticket");
+                                })
+                                .catch((error) => {
+                                    console.error('Errore durante la modifica delle autorizzazioni del canale:', error);
+                                });
+                        } else {
+                            console.error('Il canale non è una TextChannel valida.');
+                        }
+                        canale.send(`<@&`+RuoloStaff+`> <@${interaction.user.id}>`);
+                        
+    
+                        let bchiudialtro = new Discord.MessageButton()
+                            .setLabel("Chiudi")
+                            .setStyle("DANGER")
+                            .setCustomId("chiudialtro");
+    
+                        let baccettato = new Discord.MessageButton()
+                            .setLabel("Accettato")
+                            .setStyle("SUCCESS")
+                            .setCustomId("accettatoaltro");
+                        
+                        let brifiutato = new Discord.MessageButton()
+                            .setLabel("Rifiutato")
+                            .setStyle("DANGER")
+                            .setCustomId("rifiutatoaltro");
+    
+                        let battesa = new Discord.MessageButton()
+                            .setLabel("In attesa")
+                            .setStyle("SECONDARY")
+                            .setCustomId("attesaaltro");
+    
+                        let row = new Discord.MessageActionRow()
+                            .addComponents(bchiudialtro, baccettato, brifiutato, battesa);
+    
+                        let ebenvenuto = new Discord.MessageEmbed()
+                            .setTitle("Benvenuto nella tua candidatura!")
+                            .setDescription("Benvenuto nella candidatura per **ShoreMC**! Nell'attesa ti preghiamo di non menzionare lo staff. Ci potrebbero volere fino a 24h per ricevere una risposta.")
+                        canale.send({embeds: [ebenvenuto], components: [row]});
+                    });
+                } break;
+                case "media": {
+                    var server = client.guilds.cache.get(GuildId);
+    
+                    interaction.reply({ content: "Sto aprendo una candidatura", ephemeral: true });
+                    server.channels.create("media-" + interaction.user.username, {
+                        type: "text"
+                    }).then(canale => {
+                        canale.setTopic(`User ID: ${interaction.user.id}`);
+                        canale.setParent(CategoriaCandidature); //Settare la categoria
+                        if (canale.type === 'GUILD_TEXT') {
+                            // Crea un oggetto 'PermissionOverwriteFlags' per definire le autorizzazioni
+                            const permissionOverwrites = [
+                                {
+                                    id: server.id,
+                                    deny: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                                {
+                                    id: interaction.user.id, // Utilizza interaction.user.id come ID dell'utente
+                                    allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                                {
+                                    id: RuoloStaff,
+                                    allow: [Permissions.FLAGS.VIEW_CHANNEL],
+                                },
+                            ];
+    
+                            // Utilizza 'permissionOverwrites.edit()' per aggiornare le autorizzazioni del canale
+                            canale.permissionOverwrites.set(permissionOverwrites)
+                                .then(() => {
+                                    console.log("aggiornati permessi ticket");
+                                })
+                                .catch((error) => {
+                                    console.error('Errore durante la modifica delle autorizzazioni del canale:', error);
+                                });
+                        } else {
+                            console.error('Il canale non è una TextChannel valida.');
+                        }
+                        canale.send(`<@&`+RuoloStaff+`> <@${interaction.user.id}>`);
+                        
+    
+                        let bchiudialtro = new Discord.MessageButton()
+                            .setLabel("Chiudi")
+                            .setStyle("DANGER")
+                            .setCustomId("chiudialtro");
+    
+                        let baccettato = new Discord.MessageButton()
+                            .setLabel("Accettato")
+                            .setStyle("SUCCESS")
+                            .setCustomId("accettatoaltro");
+                        
+                        let brifiutato = new Discord.MessageButton()
+                            .setLabel("Rifiutato")
+                            .setStyle("DANGER")
+                            .setCustomId("rifiutatoaltro");
+    
+                        let battesa = new Discord.MessageButton()
+                            .setLabel("In attesa")
+                            .setStyle("SECONDARY")
+                            .setCustomId("attesaaltro");
+    
+                        let row = new Discord.MessageActionRow()
+                            .addComponents(bchiudialtro, baccettato, brifiutato, battesa);
+    
+                        let ebenvenuto = new Discord.MessageEmbed()
+                            .setTitle("Benvenuto nella tua candidatura!")
+                            .setDescription("Benvenuto nella candidatura per **ShoreMC**! Nell'attesa ti preghiamo di non menzionare lo staff. Ci potrebbero volere fino a 24h per ricevere una risposta.")
+                        canale.send({embeds: [ebenvenuto], components: [row]});
+                    });
+                } break;
+            }
+        }
+    }
+);
 
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isButton()) return;
@@ -619,7 +1026,29 @@ client.on("interactionCreate", async (interaction) => {
             .setColor("#00ffff");
         interaction.reply({ embeds: [eattesa] });
         interaction.channel.setParent(CategoriaAttesa);
-    }
+    } else if (interaction.customId == "accettatoaltro") {
+        if (!interaction.member.roles.cache.has(RuoloStaff)) {
+            return interaction.reply({ content: "Non hai il permesso", ephemeral: true })
+        }
+
+        const embed = new Discord.MessageEmbed()
+            .setTitle('✅Accettato!')
+            .setDescription("Siccome soddisfi i requisiti abbiamo deciso di farti passare!\nAdesso ti aspettta solo un'ultima sfida: l'Oral Interview! Consiste in una prova orale dove dovrai dimostrare tutte le tue abilità. Se passerai qeusta prova ti prenderemo! Ed entrai nella famiglia di **ShoreMC**!\n **TI ASPETTIAMO!!!**")
+            .setFooter({text: FooterEmbeds})
+            .setColor("#00ff08")
+        interaction.reply({ embeds: [embed] });
+    } else if (interaction.customId == "rifiutatoaltro") {
+        if (!interaction.member.roles.cache.has(RuoloStaff)) {
+            return interaction.reply({ content: "Non hai il permesso", ephemeral: true })
+        }
+
+        const embed = new Discord.MessageEmbed()
+            .setTitle('❌Rifiutato!')
+            .setDescription("Siccome non soddisfi i requisiti abbiamo deciso di non farti passare!\nGrazie lo stesso per esserti candidato! Se vuoi puoi riprovare a candidarti tra 28 giorni!")
+            .setFooter({text: FooterEmbeds})
+            .setColor("#ff0000")
+        interaction.reply({ embeds: [embed] });
+    };
 });
 
 client.on('interactionCreate', async  (interaction) => {
@@ -774,5 +1203,13 @@ const getAllMessages = async (channel) => {
 
     return allMessages
 };
-    
 
+client.on('guildMemberAdd', async (member) => {
+    var counter = client.channels.cache.get("1246777528262328390")
+    counter.setName("🫂Membri » " + member.guild.memberCount);
+}) 
+
+client.on('guildMemberRemove', async (member) => {
+    var counter = client.channels.cache.get("1246777528262328390")
+    counter.setName("🫂Membri » " + member.guild.memberCount);
+}) 
